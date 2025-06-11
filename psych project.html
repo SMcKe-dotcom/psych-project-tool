@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AP Psychology Project Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Academia -->
+    <!-- Application Structure Plan: A single-page dashboard with a fixed sidebar navigation. This structure was chosen because it provides a persistent, clear overview of the available tools (Overview, Guide, Assessment, Panels) for the teacher, allowing quick switching between contexts without losing place. The main content area dynamically displays the selected section. This is superior to a long-scrolling page for a tool-based application, as it separates distinct functional areas (e.g., reviewing guidelines vs. using the assessment visualizer) for better cognitive organization and usability. The interactive grade-weighting chart is the centerpiece, designed to directly address the teacher's primary need: understanding how the two rubrics combine into a final grade. -->
+    <!-- Visualization & Content Choices: 
+        - Project Phases -> Inform -> Visual Timeline (HTML/CSS Flexbox) -> Interaction: Hover to highlight -> Justification: Visually represents the project's progression clearly.
+        - Grading Rubrics -> Compare/Inform -> Interactive Tables (HTML/Tailwind) -> Interaction: Hover on cells, toggle between rubrics -> Justification: Allows easy comparison and simulates a grading workflow.
+        - Grade Composition -> Analyze/Inform -> Dynamic Donut Chart (Chart.js) -> Interaction: A slider dynamically adjusts the chart's data -> Justification: Provides an immediate, powerful visual representation of the relationship between the main project score and the participation score, making the new grading structure intuitive.
+        - Project Formats -> Inform -> Clickable Cards (HTML/JS) -> Interaction: Click to show/hide details -> Justification: Organizes distinct options cleanly without cluttering the main view.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-link { transition: all 0.2s ease-in-out; }
+        .sidebar-link.active, .sidebar-link:hover { background-color: #e5e7eb; color: #11182c; }
+        .content-section { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; height: auto; max-height: 400px; }
+        .rubric-table th, .rubric-table td { border: 1px solid #d1d5db; padding: 12px; text-align: left; }
+        .rubric-table th { background-color: #f3f4f6; }
+        .rubric-table td:hover { background-color: #eff6ff; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="flex h-screen bg-white">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-gray-100/80 border-r border-gray-200 flex-shrink-0">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-gray-900">AP Psych Project</h1>
+                <p class="text-sm text-gray-600 mt-1">Management Dashboard</p>
+            </div>
+            <nav class="mt-6 px-4">
+                <a href="#overview" class="sidebar-link flex items-center px-4 py-3 rounded-lg text-gray-700 font-medium">
+                    <span class="mr-3">📊</span> Overview
+                </a>
+                <a href="#guide" class="sidebar-link flex items-center px-4 py-3 mt-2 rounded-lg text-gray-700 font-medium">
+                    <span class="mr-3">📚</span> Project Guide
+                </a>
+                <a href="#assessment" class="sidebar-link flex items-center px-4 py-3 mt-2 rounded-lg text-gray-700 font-medium">
+                    <span class="mr-3">⚖️</span> Assessment Center
+                </a>
+                <a href="#panels" class="sidebar-link flex items-center px-4 py-3 mt-2 rounded-lg text-gray-700 font-medium">
+                    <span class="mr-3">👥</span> Panel Management
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-10 bg-gray-50">
+            <!-- Overview Section -->
+            <section id="overview" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-900">Project Overview</h2>
+                <p class="mt-2 text-gray-600">This dashboard synthesizes the project guidelines and the new defense panel proposal into an interactive tool to help manage the AP Psychology capstone project.</p>
+                
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200">
+                        <h3 class="font-semibold text-lg text-gray-800">Authentic Assessment</h3>
+                        <p class="mt-2 text-gray-600">The project replaces a traditional final exam with student-led defense panels, fostering critical thinking and communication skills.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200">
+                        <h3 class="font-semibold text-lg text-gray-800">Two-Part Grading</h3>
+                        <p class="mt-2 text-gray-600">Student grades are based on two rubrics: one for the main research project and one for their participation as questioners.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200">
+                        <h3 class="font-semibold text-lg text-gray-800">Peer Questioning</h3>
+                        <p class="mt-2 text-gray-600">A key component is the peer-led Q&A session, where students act as active listeners and questioners for their peers' research.</p>
+                    </div>
+                </div>
+
+                <div class="mt-10 bg-white p-8 rounded-xl border border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6">Project Timeline & Phases</h3>
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="text-center p-4 rounded-lg flex-1">
+                            <div class="text-4xl">1️⃣</div>
+                            <h4 class="font-semibold mt-2">Topic Selection</h4>
+                            <p class="text-sm text-gray-500">Students brainstorm and submit a focused project proposal.</p>
+                        </div>
+                        <div class="text-gray-300 font-light text-2xl hidden md:block">→</div>
+                        <div class="text-center p-4 rounded-lg flex-1">
+                            <div class="text-4xl">2️⃣</div>
+                            <h4 class="font-semibold mt-2">Research & Dev</h4>
+                            <p class="text-sm text-gray-500">Gather sources and begin creating the final product. Mid-point check-in required.</p>
+                        </div>
+                        <div class="text-gray-300 font-light text-2xl hidden md:block">→</div>
+                        <div class="text-center p-4 rounded-lg flex-1">
+                             <div class="text-4xl">3️⃣</div>
+                            <h4 class="font-semibold mt-2">Final Product</h4>
+                            <p class="text-sm text-gray-500">Complete the main project and prepare a presentation summary.</p>
+                        </div>
+                        <div class="text-gray-300 font-light text-2xl hidden md:block">→</div>
+                        <div class="text-center p-4 rounded-lg flex-1">
+                            <div class="text-4xl">4️⃣</div>
+                            <h4 class="font-semibold mt-2">Defense & Reflection</h4>
+                            <p class="text-sm text-gray-500">Present findings in panels and participate in peer questioning.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Project Guide Section -->
+            <section id="guide" class="content-section hidden">
+                 <h2 class="text-3xl font-bold text-gray-900">Project Guide Explorer</h2>
+                <p class="mt-2 text-gray-600">This section provides an interactive breakdown of the guidelines given to students. Click on the project format options below to see more details about each one.</p>
+
+                <div class="mt-8 bg-white p-8 rounded-xl border border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6">Approved Project Formats</h3>
+                    <div id="project-formats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Project format cards will be injected here by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Assessment Center Section -->
+            <section id="assessment" class="content-section hidden">
+                <h2 class="text-3xl font-bold text-gray-900">Assessment Center</h2>
+                <p class="mt-2 text-gray-600">This is your central hub for grading. Use the Grade Weighting Visualizer to understand how scores from the two rubrics contribute to a final grade. Use the tabs to switch between the Main Project Rubric and the Panel Participation Rubric.</p>
+
+                <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Grade Weighting Visualizer</h3>
+                        <div class="chart-container">
+                            <canvas id="gradeChart"></canvas>
+                        </div>
+                        <div class="mt-6 px-2">
+                            <label for="weightingSlider" class="block text-sm font-medium text-gray-700 mb-2">Adjust Participation Weight</label>
+                            <input id="weightingSlider" type="range" min="0" max="100" value="30" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>0%</span>
+                                <span>100%</span>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="text-gray-700"><span class="font-bold">Main Project: </span><span id="mainProjectWeight">70</span>%</p>
+                                <p class="text-gray-700"><span class="font-bold">Participation: </span><span id="participationWeight">30</span>%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200">
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-6" id="rubric-tabs">
+                                <button class="rubric-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-blue-500 text-blue-600" data-rubric="main">Main Project Rubric</button>
+                                <button class="rubric-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-rubric="participation">Participation Rubric</button>
+                            </nav>
+                        </div>
+                        <div id="main-rubric-content" class="rubric-content mt-6 overflow-x-auto">
+                            <!-- Main rubric table will be injected by JS -->
+                        </div>
+                        <div id="participation-rubric-content" class="rubric-content mt-6 hidden overflow-x-auto">
+                           <!-- Participation rubric table will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel Management Section -->
+            <section id="panels" class="content-section hidden">
+                <h2 class="text-3xl font-bold text-gray-900">Panel Management</h2>
+                 <p class="mt-2 text-gray-600">This section summarizes the logistics and requirements for the student defense panels, helping you organize the final assessment phase.</p>
+
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div class="bg-white p-8 rounded-xl border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Panel Format at a Glance</h3>
+                        <ul class="space-y-4 text-gray-700">
+                            <li class="flex items-start"><span class="mr-3 mt-1">👥</span><div><strong>Groups:</strong> 3-4 students per panel.</div></li>
+                            <li class="flex items-start"><span class="mr-3 mt-1">⏱️</span><div><strong>Presentations:</strong> 5-7 minute summary of their research project.</div></li>
+                            <li class="flex items-start"><span class="mr-3 mt-1">❓</span><div><strong>Questioning:</strong> Peers act as the primary questioners after each presentation.</div></li>
+                            <li class="flex items-start"><span class="mr-3 mt-1">🧑‍🏫</span><div><strong>Moderation:</strong> Teacher moderates the session and assesses both presenter and participants using the official rubrics.</div></li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-8 rounded-xl border border-gray-200">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Required Student Submissions</h3>
+                        <p class="mb-4 text-gray-600">To ensure active participation, students must submit two key documents:</p>
+                        <ul class="space-y-4 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="text-blue-500 font-bold mr-4">1.</span>
+                                <div>
+                                    <h4 class="font-semibold">Pre-Panel Question Log</h4>
+                                    <p class="text-sm text-gray-600">Before the panel, each student submits potential questions for their peers' topics to demonstrate preparation.</p>
+                                </div>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="text-blue-500 font-bold mr-4">2.</span>
+                                <div>
+                                    <h4 class="font-semibold">Post-Panel Reflection</h4>
+                                    <p class="text-sm text-gray-600">After the panel, students submit a summary of key takeaways and the questions they asked, reflecting on the session.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('.sidebar-link');
+            const rubricTabs = document.querySelectorAll('.rubric-tab');
+            const rubricContents = document.querySelectorAll('.rubric-content');
+            
+            const projectFormats = [
+                { title: 'Traditional Research Paper', description: 'An in-depth paper (4-6 pages) exploring the topic, analyzing research, and drawing conclusions.' },
+                { title: 'Literature Review', description: 'A paper (4-6 pages) that summarizes and synthesizes the findings of several research studies on a topic.' },
+                { title: 'Detailed Case Study Analysis', description: 'An analysis of a specific case using multiple psychological theories to explain behavior or issues.' },
+                { title: 'Educational Presentation/Lecture', description: 'A comprehensive educational presentation. The class sharing might be a condensed version.' },
+                { title: 'Psychological Experiment Proposal', description: 'Design a detailed, hypothetical experiment including literature review, hypothesis, methods, and ethical considerations.' },
+                { title: 'Creation of Educational Materials', description: 'Develop materials like infographics, a video script, or a website section on the topic, with accompanying notes.' }
+            ];
+
+            const mainRubricData = [
+                { criteria: "Quality of Research", ratings: ["Utilizes a wide range of highly credible, academic sources; demonstrates deep understanding.", "Uses credible sources; demonstrates good understanding.", "Uses some credible sources, but may rely on less academic ones.", "Relies on few or unreliable sources; limited understanding."] },
+                { criteria: "Understanding of Concepts / Analysis", ratings: ["Accurately and insightfully applies complex psychological terms; critically evaluates and synthesizes ideas.", "Accurately applies psychological terms; synthesizes information and draws logical conclusions.", "Attempts to apply psychological terms, but may have inaccuracies; primarily summarizes.", "Limited or inaccurate use of psychological terms; simply presents information."] },
+                { criteria: "Organization & Clarity (Product)", ratings: ["Product is exceptionally well-organized, logical, and professional.", "Product is well-organized and logical; writing/design is clear.", "Product has some organizational issues or is occasionally difficult to follow.", "Product is poorly organized and difficult to understand."] },
+                { criteria: "Quality of Final Product / Presentation", ratings: ["Exceeds requirements; polished and highly effective. Presentation is clear, engaging, and concise.", "Meets all requirements; well-executed and effective. Presentation is clear and concise.", "Meets most requirements; execution is limited. Presentation is somewhat unclear.", "Fails to meet key requirements; poorly executed. Presentation is unclear or missing key points."] },
+                { criteria: "Originality and Insight", ratings: ["Demonstrates significant independent thinking, unique perspective, or highly insightful connections.", "Demonstrates independent thinking and makes relevant connections.", "Shows some independent thought, but relies heavily on sources.", "Little evidence of independent thinking; simply restates information."] }
+            ];
+
+            const participationRubricData = [
+                 { criteria: "Active Questioning: Quantity", ratings: ["Consistently asks 2+ thoughtful questions for each presentation.", "Asks 1-2 thoughtful questions for most presentations.", "Asks 1-2 questions for some presentations.", "Asks few to no questions."] },
+                 { criteria: "Active Questioning: Quality & Depth", ratings: ["Questions are highly relevant, insightful, and make sophisticated connections to AP concepts.", "Questions are relevant, generally insightful, and connect to AP concepts.", "Questions are sometimes relevant or insightful, but may lack depth.", "Questions are rarely relevant and lack insight."] },
+                 { criteria: "Preparation: Pre-Panel Question Log", ratings: ["Submitted a complete, well-thought-out log with high-quality questions.", "Submitted a complete log with relevant questions.", "Submitted an incomplete log, or questions were general.", "Did not submit the log, or questions were irrelevant."] },
+                 { criteria: "Reflection: Post-Panel Summary", ratings: ["Submitted a thorough reflection with insightful takeaways.", "Submitted a clear reflection with relevant takeaways.", "Submitted an incomplete or superficial reflection.", "Did not submit the reflection or content was minimal."] },
+                 { criteria: "Overall Panel Etiquette & Support", ratings: ["Consistently demonstrates excellent active listening and respectful interaction.", "Generally demonstrates active listening and respectful interaction.", "Occasionally disengages or is inconsistent.", "Frequently disengages or displays unsupportive behavior."] }
+            ];
+
+            function createRubricTable(data) {
+                let table = '<table class="w-full rubric-table text-sm"><thead><tr><th>Criteria</th><th>Exemplary (4)</th><th>Proficient (3)</th><th>Developing (2)</th><th>Needs Improvement (1)</th></tr></thead><tbody>';
+                data.forEach(row => {
+                    table += `<tr><td class="font-semibold">${row.criteria}</td>`;
+                    row.ratings.forEach(rating => {
+                        table += `<td>${rating}</td>`;
+                    });
+                    table += '</tr>';
+                });
+                table += '</tbody></table>';
+                return table;
+            }
+
+            document.getElementById('main-rubric-content').innerHTML = createRubricTable(mainRubricData);
+            document.getElementById('participation-rubric-content').innerHTML = createRubricTable(participationRubricData);
+
+            function populateProjectFormats() {
+                const container = document.getElementById('project-formats');
+                container.innerHTML = '';
+                projectFormats.forEach(format => {
+                    const card = document.createElement('div');
+                    card.className = 'p-4 border rounded-lg cursor-pointer bg-gray-50 hover:bg-blue-50 hover:border-blue-300';
+                    card.innerHTML = `
+                        <h4 class="font-semibold text-gray-800">${format.title}</h4>
+                        <p class="text-sm text-gray-600 mt-2 hidden">${format.description}</p>
+                    `;
+                    card.addEventListener('click', () => {
+                        card.querySelector('p').classList.toggle('hidden');
+                    });
+                    container.appendChild(card);
+                });
+            }
+
+            function navigateTo(hash) {
+                sections.forEach(section => {
+                    if ('#' + section.id === hash) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === hash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const hash = link.getAttribute('href');
+                    window.location.hash = hash;
+                });
+            });
+
+            rubricTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetRubric = tab.dataset.rubric;
+                    
+                    rubricTabs.forEach(t => {
+                        t.classList.remove('active-tab', 'border-blue-500', 'text-blue-600');
+                        t.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                    });
+                    
+                    tab.classList.add('active-tab', 'border-blue-500', 'text-blue-600');
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+
+                    rubricContents.forEach(content => {
+                        if (content.id === `${targetRubric}-rubric-content`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            window.addEventListener('hashchange', () => navigateTo(window.location.hash || '#overview'));
+            navigateTo(window.location.hash || '#overview');
+            populateProjectFormats();
+
+            const gradeChartCtx = document.getElementById('gradeChart').getContext('2d');
+            let gradeChart = new Chart(gradeChartCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Main Project', 'Participation'],
+                    datasets: [{
+                        data: [70, 30],
+                        backgroundColor: ['#3b82f6', '#93c5fd'],
+                        borderColor: '#ffffff',
+                        borderWidth: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { display: true, position: 'bottom' },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+
+            const weightingSlider = document.getElementById('weightingSlider');
+            const mainProjectWeightEl = document.getElementById('mainProjectWeight');
+            const participationWeightEl = document.getElementById('participationWeight');
+
+            weightingSlider.addEventListener('input', (e) => {
+                const participationWeight = parseInt(e.target.value);
+                const mainProjectWeight = 100 - participationWeight;
+
+                mainProjectWeightEl.textContent = mainProjectWeight;
+                participationWeightEl.textContent = participationWeight;
+
+                gradeChart.data.datasets[0].data = [mainProjectWeight, participationWeight];
+                gradeChart.update();
+            });
+        });
+    </script>
+</body>
+</html>
